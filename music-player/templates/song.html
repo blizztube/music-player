@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ filename }}</h2>
+<p>Plays: {{ song_info.plays }}</p>
+<p>Rating: {{ song_info.rating }}%</p>
+
+<h3>Rate this song:</h3>
+<form action="{{ url_for('rate_song', filename=filename) }}" method="POST">
+    <label for="rating">Rating (0-100):</label>
+    <input type="number" id="rating" name="rating" min="0" max="100">
+    <button type="submit">Submit</button>
+</form>
+
+<audio controls>
+    <source src="{{ url_for('play', filename=filename) }}" type="audio/mp4">
+    Your browser does not support the audio element.
+</audio>
+
+<h3>Play Counts</h3>
+<div id="daily-plays-chart" style="width: 100%; height: 400px;"></div>
+<div id="total-plays-chart" style="width: 100%; height: 400px;"></div>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Prepare data
+    const dailyPlays = {{ song_info.daily_plays|tojson }};
+    const dates = Object.keys(dailyPlays);
+    const plays = dates.map(date => dailyPlays[date]);
+    const totalPlays = [];
+    let cumulativePlays = 0;
+    plays.forEach(play => {
+        cumulativePlays += play;
+        totalPlays.push(cumulativePlays);
+    });
+
+    // Render daily plays chart
+    Highcharts.chart('daily-plays-chart', {
+        chart: { type: 'column' },
+        title: { text: 'Daily Plays' },
+        xAxis: { categories: dates },
+        yAxis: { title: { text: 'Plays' } },
+        series: [{ name: 'Plays', data: plays }]
+    });
+
+    // Render total plays chart
+    Highcharts.chart('total-plays-chart', {
+        chart: { type: 'line' },
+        title: { text: 'Total Plays Over Time' },
+        xAxis: { categories: dates },
+        yAxis: { title: { text: 'Total Plays' } },
+        series: [{ name: 'Total Plays', data: totalPlays }]
+    });
+});
+</script>
+{% endblock %}

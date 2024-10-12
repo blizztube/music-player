@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Music Player</h1>
+    </header>
+
+    <main>
+        <h2>Songs</h2>
+        <ul>
+            {% for song in songs %}
+            <li>
+                {{ song }}
+                <button onclick="playSong('{{ url_for('play', filename=song) }}')">Play</button>
+                <a href="{{ url_for('song', filename=song) }}">Details</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <h2>Now Playing</h2>
+        <audio id="audioPlayer">
+            Your browser does not support the audio element.
+        </audio>
+    </main>
+
+    <div id="controls">
+        <button onclick="playAudio()">Play</button>
+        <button onclick="pauseAudio()">Pause</button>
+        <button onclick="stopAudio()">Stop</button>
+        <label for="volumeControl">Volume:</label>
+        <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="1" onchange="setVolume(this.value)">
+    </div>
+
+    <!-- Seek bar and time display -->
+    <div id="seekContainer">
+        <input type="range" id="seekBar" value="0" step="1" onchange="seekAudio()">
+        <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const seekBar = document.getElementById('seekBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+
+        function playSong(songUrl) {
+            audioPlayer.src = songUrl;
+            audioPlayer.play();
+        }
+
+        function playAudio() {
+            audioPlayer.play();
+        }
+
+        function pauseAudio() {
+            audioPlayer.pause();
+        }
+
+        function stopAudio() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+        }
+
+        function setVolume(volume) {
+            audioPlayer.volume = volume;
+        }
+
+        audioPlayer.addEventListener('loadedmetadata', function() {
+            totalTimeEl.textContent = formatTime(audioPlayer.duration);
+            seekBar.max = audioPlayer.duration;
+        });
+
+        audioPlayer.addEventListener('timeupdate', function() {
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            seekBar.value = audioPlayer.currentTime;
+        });
+
+        function seekAudio() {
+            audioPlayer.currentTime = seekBar.value;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+    </script>
+</body>
+</html>
